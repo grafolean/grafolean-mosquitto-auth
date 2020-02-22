@@ -1,0 +1,11 @@
+version: '2.1'
+services:
+
+  # This docker-compose.yml is used for building the grafolean/mosquitto docker image
+  # during development.
+
+  grafolean:
+    image: grafolean/mosquitto
+    build:
+      context: .
+      dockerfile: Dockerfile
