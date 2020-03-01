@@ -39,7 +39,7 @@ RUN \
     make WITH_SRV=yes WITH_ADNS=no WITH_DOCS=no WITH_MEMORY_TRACKING=no WITH_TLS_PSK=no WITH_WEBSOCKETS=yes WITH_PERSISTENCE=no install && \
     \
     cd /build && \
-    git clone https://github.com/jpmens/mosquitto-auth-plug.git && \
+    git clone https://github.com/grafolean/mosquitto-auth-plug.git && \
     cd mosquitto-auth-plug && \
     git checkout ${MOSQUITTO_AUTH_PLUGIN_COMMIT_ID} && \
     cp config.mk.in config.mk && \
