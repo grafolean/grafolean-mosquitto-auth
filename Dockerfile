@@ -5,8 +5,8 @@ ENV MOSQUITTO_GO_AUTH_VERSION=1.3.1
 
 RUN \
     apt-get update && \
-    apt-get install -y -q --no-install-recommends golang-go libwebsockets8 libwebsockets-dev libc-ares2 libc-ares-dev openssl uuid uuid-dev && \
-    apt-get install -y -q --no-install-recommends build-essential git wget ca-certificates && \
+    apt-get install -y -q --no-install-recommends libwebsockets8 libc-ares2 openssl uuid && \
+    apt-get install -y -q --no-install-recommends build-essential git wget ca-certificates golang-go libwebsockets-dev libc-ares-dev uuid-dev && \
     \
     groupadd mosquitto && \
     mkdir -p /var/log/mosquitto/ /var/lib/mosquitto/ && \
@@ -31,11 +31,11 @@ RUN \
     install -s -m755 go-auth.so /usr/local/lib/ && \
     \
     rm -rf /build/ && \
-    apt-get purge -y build-essential git wget ca-certificates && \
+    apt-get purge -y build-essential git wget ca-certificates golang-go libwebsockets-dev libc-ares-dev uuid-dev && \
     apt-get clean autoclean && \
     apt-get autoremove --yes && \
     rm -rf /var/lib/{apt,dpkg,cache,log}/ /var/cache/apt/* /tmp/* && \
-    rm -rf /root/go/*
+    rm -rf /root/go/* /root/.cache
 
 ADD mosquitto.conf /etc/mosquitto/mosquitto.conf
 
