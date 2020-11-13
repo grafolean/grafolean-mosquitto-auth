@@ -1,58 +1,40 @@
-FROM alpine:3.8
+FROM debian:buster-slim
 
-ENV MOSQUITTO_VERSION=v1.5.5
-# Latest released version of mosquitto-auth-plugin (0.1.3) has a bug in be_jwt.c (line 205 - can't free a static array) which causes build to fail. So we
-# use the latest commit id instead, but we still want to pin it:
-ENV MOSQUITTO_AUTH_PLUGIN_COMMIT_ID=1bc268535d526bfabea8dafb3a43d51bc5655b22
-#ENV MOSQUITTO_AUTH_PLUGIN_COMMIT_ID=acae8f6798f86d819131339210b087bb0a7ac474  # 0.1.3
-
-# Note that using libwebsockets from alpine (version 3.0.0-r0) doesn't work (doesn't complete handshake), so we must compile it ourselves:
-ENV LIBWEBSOCKETS_VERSION=v3.1-stable
+ENV MOSQUITTO_VERSION=1.6.10
+ENV MOSQUITTO_GO_AUTH_VERSION=1.3.1
 
 RUN \
-    apk add --no-cache --virtual .build-dependencies git libressl build-base libressl-dev util-linux-dev c-ares-dev curl-dev cmake && \
-    apk add --no-cache libressl libuuid c-ares && \
-    apk add --no-cache curl ca-certificates && \
-    addgroup -S mosquitto && \
-    adduser -S mosquitto -G mosquitto -D -H && \
+    apt-get update && \
+    apt-get install -y -q --no-install-recommends golang-go libwebsockets8 libwebsockets-dev libc-ares2 libc-ares-dev openssl uuid uuid-dev && \
+    apt-get install -y -q --no-install-recommends build-essential git wget ca-certificates && \
+    \
+    groupadd mosquitto && \
+    mkdir -p /var/log/mosquitto/ /var/lib/mosquitto/ && \
+    useradd -s /sbin/nologin mosquitto -g mosquitto -d /var/lib/mosquitto && \
+    \
+    echo "BUILDING mosquitto $MOSQUITTO_VERSION:" && \
     mkdir /build && \
     cd /build && \
-    git clone -b ${LIBWEBSOCKETS_VERSION} https://libwebsockets.org/repo/libwebsockets && \
-    cd libwebsockets && \
-    cmake . \
-      -DCMAKE_BUILD_TYPE=MinSizeRel \
-      -DLWS_IPV6=ON \
-      -DLWS_WITHOUT_CLIENT=ON \
-      -DLWS_WITHOUT_TESTAPPS=ON \
-      -DLWS_WITHOUT_EXTENSIONS=ON \
-      -DLWS_WITHOUT_BUILTIN_GETIFADDRS=ON \
-      -DLWS_WITH_ZIP_FOPS=OFF \
-      -DLWS_WITH_ZLIB=OFF \
-      -DLWS_WITH_SHARED=OFF && \
-    make && \
-    rm -rf /root/.cmake && \
-    make install && \
-    \
-    cd /build && \
-    git clone -b ${MOSQUITTO_VERSION} https://github.com/eclipse/mosquitto.git && \
-    cd mosquitto && \
+    wget "http://mosquitto.org/files/source/mosquitto-$MOSQUITTO_VERSION.tar.gz" && \
+    tar -xvzf "mosquitto-$MOSQUITTO_VERSION.tar.gz" && \
+    cd "mosquitto-$MOSQUITTO_VERSION" && \
     make WITH_SRV=yes WITH_ADNS=no WITH_DOCS=no WITH_MEMORY_TRACKING=no WITH_TLS_PSK=no WITH_WEBSOCKETS=yes WITH_PERSISTENCE=no install && \
     \
+    echo "BUILDING mosquitto-go-auth:" && \
     cd /build && \
-    git clone https://github.com/grafolean/mosquitto-auth-plug.git && \
-    cd mosquitto-auth-plug && \
-    git checkout ${MOSQUITTO_AUTH_PLUGIN_COMMIT_ID} && \
-    cp config.mk.in config.mk && \
-    sed -i -E 's/(BACKEND_[A-Z]+[ ]*[?]=[ ]*)yes/\1no/g' config.mk && \
-    sed -i -E 's/(BACKEND_HTTP+[ ]*[?]=[ ]*)no/\1yes/g' config.mk && \
-    sed -i -E 's/(BACKEND_JWT+[ ]*[?]=[ ]*)no/\1yes/g' config.mk && \
-    sed -i -E 's#^(MOSQUITTO_SRC+[ ]*=).*#\1 /build/mosquitto#g' config.mk && \
-    cat config.mk && \
+    wget "https://github.com/iegomez/mosquitto-go-auth/archive/$MOSQUITTO_GO_AUTH_VERSION.tar.gz" -O mosquitto-go-auth.tar.gz && \
+    tar -xvzf mosquitto-go-auth.tar.gz && \
+    cd "mosquitto-go-auth-$MOSQUITTO_GO_AUTH_VERSION" && \
+    export CGO_CFLAGS="-I/usr/local/include -fPIC" && \
+    export CGO_LDFLAGS="-shared" && \
     make && \
-    install -s -m755 auth-plug.so /usr/local/lib/ && \
+    install -s -m755 go-auth.so /usr/local/lib/ && \
     \
     rm -rf /build/ && \
-    apk del .build-dependencies
+    apt-get purge -y build-essential git wget ca-certificates && \
+    apt-get clean autoclean && \
+    apt-get autoremove --yes && \
+    rm -rf /var/lib/{apt,dpkg,cache,log}/ /var/cache/apt/* /tmp/*
 
 ADD mosquitto.conf /etc/mosquitto/mosquitto.conf
 
