@@ -34,7 +34,8 @@ RUN \
     apt-get purge -y build-essential git wget ca-certificates && \
     apt-get clean autoclean && \
     apt-get autoremove --yes && \
-    rm -rf /var/lib/{apt,dpkg,cache,log}/ /var/cache/apt/* /tmp/*
+    rm -rf /var/lib/{apt,dpkg,cache,log}/ /var/cache/apt/* /tmp/* && \
+    rm -rf /root/go/*
 
 ADD mosquitto.conf /etc/mosquitto/mosquitto.conf
 
