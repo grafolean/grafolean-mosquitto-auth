@@ -1,7 +1,7 @@
 FROM debian:buster-slim
 
-ENV MOSQUITTO_VERSION=1.6.10
-ENV MOSQUITTO_GO_AUTH_VERSION=1.3.1
+ENV MOSQUITTO_VERSION=1.6.12
+ENV MOSQUITTO_GO_AUTH_VERSION=1.3.2
 
 RUN \
     apt-get update && \
@@ -15,7 +15,7 @@ RUN \
     echo "BUILDING mosquitto $MOSQUITTO_VERSION:" && \
     mkdir /build && \
     cd /build && \
-    wget "http://mosquitto.org/files/source/mosquitto-$MOSQUITTO_VERSION.tar.gz" && \
+    wget "https://mosquitto.org/files/source/mosquitto-$MOSQUITTO_VERSION.tar.gz" && \
     tar -xvzf "mosquitto-$MOSQUITTO_VERSION.tar.gz" && \
     cd "mosquitto-$MOSQUITTO_VERSION" && \
     make WITH_SRV=yes WITH_ADNS=no WITH_DOCS=no WITH_MEMORY_TRACKING=no WITH_TLS_PSK=no WITH_WEBSOCKETS=yes WITH_PERSISTENCE=no install && \
