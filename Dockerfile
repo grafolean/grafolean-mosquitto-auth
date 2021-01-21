@@ -26,7 +26,7 @@ RUN \
     tar -xvzf mosquitto-go-auth.tar.gz && \
     cd "mosquitto-go-auth-$MOSQUITTO_GO_AUTH_VERSION" && \
     export CGO_CFLAGS="-I/usr/local/include -fPIC" && \
-    export CGO_LDFLAGS="-shared" && \
+    export CGO_LDFLAGS="-shared -Wl,-unresolved-symbols=ignore-all" && \
     make && \
     install -s -m755 go-auth.so /usr/local/lib/ && \
     \
